@@ -16,6 +16,7 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
 from FastSimulation.Event.ParticleFilter_cfi import *
+from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import dEdX_weights as dEdX
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(DUMMYEVTSPERJOB) )
 
@@ -37,6 +38,9 @@ process.ana = cms.EDAnalyzer('HGCalAnalysis',
                              readGenParticles = cms.bool(True),
                              readOfficialReco = cms.bool(DUMMYROR),
                              readCaloParticles = cms.bool(False),
+                             storePCAvariables = cms.bool(False),
+                             recomputePCA = cms.bool(False),
+                             dEdXWeights = dEdX,
                              layerClusterPtThreshold = cms.double(-1),  # All LayerCluster belonging to a multicluster are saved; this Pt threshold applied to the others
                              TestParticleFilter = ParticleFilterBlock.ParticleFilter
 )
