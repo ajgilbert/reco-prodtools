@@ -114,6 +114,36 @@ elif gunmode == 'pythia8':
           ),
         PythiaParameters = cms.PSet(parameterSets = cms.vstring())
     )
+elif gunmode == 'dijet':
+    from Configuration.Generator.Pythia8CommonSettings_cfi import *
+    from Configuration.Generator.Pythia8CUEP8M1Settings_cfi import *
+    process.generator = cms.EDFilter("Pythia8GeneratorFilter",
+        maxEventsToPrint = cms.untracked.int32(1),
+        pythiaPylistVerbosity = cms.untracked.int32(1),
+        filterEfficiency = cms.untracked.double(1.0),
+        pythiaHepMCVerbosity = cms.untracked.bool(False),
+        comEnergy = cms.double(14000.0),
+        crossSection = cms.untracked.double(1.40932e+08),
+        PythiaParameters = cms.PSet(
+            pythia8CommonSettingsBlock,
+            pythia8CUEP8M1SettingsBlock,
+            processParameters = cms.vstring(
+                #'HardQCD:all = on',
+                'HardQCD:gg2qqbar = on',
+                'HardQCD:qq2qq = on',
+                'HardQCD:qqbar2qqbarNew = on',
+                'PhaseSpace:pTHatMin = DUMMYTHRESHMIN',
+                'PhaseSpace:pTHatMax = DUMMYTHRESHMAX',
+            ),
+            parameterSets = cms.vstring('pythia8CommonSettings',
+                                        'pythia8CUEP8M1Settings',
+                                        'processParameters',
+                                        )
+        )
+    )
+
+
+
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)
@@ -135,7 +165,7 @@ for path in process.paths:
 	getattr(process,path)._seq = process.generator * getattr(process,path)._seq
 
 #Setup FWK for multithreaded
-process.options.numberOfThreads=cms.untracked.uint32(4)
+process.options.numberOfThreads=cms.untracked.uint32(1)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 
 # customisation of the process.
