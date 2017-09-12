@@ -30,5 +30,5 @@ if [ ${localFlag} == "True" ]
   then
     cp *${dataTier}*.root ${curDir}/${outDir}/${dataTier}/
   else
-    xrdcp -N -v *${dataTier}*.root root://eoscms.cern.ch/${eosArea}/${outDir}/${dataTier}/
+    xrdcp -N -v -f *${dataTier}*.root root://eoscms.cern.ch/${eosArea}/${outDir}/${dataTier}/
 fi
