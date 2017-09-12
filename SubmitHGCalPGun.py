@@ -7,8 +7,10 @@ import fnmatch
 import time
 import math
 import re
+from UserCode.ICHiggsTauTau.jobs import Jobs
+import argparse
 
-eosExec = '/afs/cern.ch/project/eos/installation/0.3.84-aquamarine/bin/eos.select'
+eosExec = 'eos'
 
 
 ### parsing input options
@@ -46,8 +48,8 @@ def parseOptions():
     parser.add_option('', '--noReClust',  action='store_false', dest='RECLUST',  default=True, help='do not re-run RECO-level clustering at NTUP step, default is True (do re-run the clustering).')
 
     # store options and arguments as global variables
-    global opt, args
-    (opt, args) = parser.parse_args()
+    global opt, args, unknown
+    (opt, args) = parser.parse_args(unknown)
 
     # sanity check for data tiers
     dataTiers = ['GSD', 'RECO', 'NTUP']
@@ -60,7 +62,7 @@ def parseOptions():
         print 'ERROR: CMSSW does not seem to be set up. Exiting...'
         sys.exit()
 
-    partGunModes = ['default', 'pythia8']
+    partGunModes = ['default', 'pythia8', 'dijet']
     if opt.gunMode not in partGunModes:
         parser.error('Particle gun mode ' + opt.gunMode + ' is not supported. Exiting...')
         sys.exit()
@@ -177,10 +179,17 @@ def getInputFileList(DASquery,inPath, inSubDir, local, pattern):
 
 ### submission of GSD/RECO production
 def submitHGCalProduction():
+    global opt, args, particles, unknown
+    job_mgr = Jobs()
+    parser = argparse.ArgumentParser()
+    job_mgr.attach_job_args(parser)
+    argsx, unknown = parser.parse_known_args() 
+    job_mgr.set_args(argsx)
+    print unknown
 
     # parse the arguments and options
-    global opt, args, particles
     parseOptions()
+
 
     # save working dir
     currentDir = os.getcwd()
@@ -191,6 +200,8 @@ def submitHGCalProduction():
     partGunType = 'FlatRandom%sGunProducer' % opt.gunType
     if opt.gunMode == 'pythia8':
         partGunType = 'Pythia8%sGun' % opt.gunType
+    if opt.gunMode == 'dijet':
+        partGunType = 'Dijet'
     if opt.InConeID != '':
         partGunType = 'MultiParticleInConeGunProducer'  # change part gun type if needed, keep opt.gunType unchanged (E or Pt) for the "primary particle"
 
@@ -261,7 +272,7 @@ process.mix.maxBunch = cms.int32(3)
             processCmd('mkdir -p '+outDir+'/std/')
         else:
             print 'Directory '+outDir+' already exists. Exiting...'
-            sys.exit()
+            #sys.exit()
     elif (opt.DTIER == 'RECO' or opt.DTIER == 'NTUP'):
         if not DASquery:
             outDir = opt.inDir
@@ -398,7 +409,11 @@ process.mix.maxBunch = cms.int32(3)
             write_template.close()
 
 
-            cmd = 'bsub -o '+outDir+'/std/'+basename +'.out -e '+outDir+'/std/'+basename +'.err -q '+opt.QUEUE+' -J '+basename+' "SubmitFileGSD.sh '+currentDir+' '+outDir+' '+cfgfile+' '+str(opt.LOCAL)+' '+CMSSW_VERSION+' '+CMSSW_BASE+' '+SCRAM_ARCH+' '+opt.eosArea+' '+opt.DTIER+'"'
+            # cmd = 'bsub -o '+outDir+'/std/'+basename +'.out -e '+outDir+'/std/'+basename +'.err -q '+opt.QUEUE+' -J '+basename+' "SubmitFileGSD.sh '+currentDir+' '+outDir+' '+cfgfile+' '+str(opt.LOCAL)+' '+CMSSW_VERSION+' '+CMSSW_BASE+' '+SCRAM_ARCH+' '+opt.eosArea+' '+opt.DTIER+'"'
+            cmd = 'SubmitFileGSD.sh '+currentDir+' '+outDir+' '+cfgfile+' '+str(opt.LOCAL)+' '+CMSSW_VERSION+' '+CMSSW_BASE+' '+SCRAM_ARCH+' '+opt.eosArea+' '+opt.DTIER
+            cmd = 'cmsRun %s/%s/cfg/%s; xrdcp -N -v -f *%s*.root root://eoscms.cern.ch/%s/%s/%s/' % (
+                currentDir, outDir, cfgfile, opt.DTIER, opt.eosArea, outDir, opt.DTIER)
+            job_mgr.job_queue.append(cmd)
 
             #TODO This could probably be better handled by a job array
             #Example: bsub -J "foo[1-3]" -oo "foo.%I.out" -eo "foo.%I.err" -q 8nm "sleep 1"
@@ -406,18 +421,19 @@ process.mix.maxBunch = cms.int32(3)
 
             if(opt.DRYRUN):
                 print 'Dry-run: ['+cmd+']'
-            else:
-                output = processCmd(cmd)
-                while ('error' in output):
-                    time.sleep(1.0);
-                    output = processCmd(cmd)
-                    if ('error' not in output):
-                        print 'Submitted after retry - job '+str(jobCount+1)
+            #else:
+                #output = processCmd(cmd)
+                #while ('error' in output):
+                #    time.sleep(1.0);
+                #    output = processCmd(cmd)
+                #    if ('error' not in output):
+                #        print 'Submitted after retry - job '+str(jobCount+1)
 
 
             jobCount += 1
 
     print '[Submitted '+str(jobCount)+' jobs]'
+    job_mgr.flush_queue()
 
 ### run the submitHGCalProduction() as main
 if __name__ == "__main__":
