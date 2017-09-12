@@ -34,6 +34,7 @@ process.source = cms.Source("PoolSource",
 process.ana = cms.EDAnalyzer('HGCalAnalysis',
                              detector = cms.string("all"),
                              rawRecHits = cms.bool(True),
+                             readGenParticles = cms.bool(True),
                              readOfficialReco = cms.bool(DUMMYROR),
                              readCaloParticles = cms.bool(False),
                              layerClusterPtThreshold = cms.double(-1),  # All LayerCluster belonging to a multicluster are saved; this Pt threshold applied to the others
