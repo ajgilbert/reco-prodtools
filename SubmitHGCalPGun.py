@@ -231,7 +231,7 @@ process.RandomNumberGeneratorService.mix.initialSeed = cms.untracked.uint32(PUSE
 process.mix.input.nbPileupEvents.averageNumber = cms.double(PUVALUE)
 process.mix.input.fileNames = cms.untracked.vstring(PUFILES)
 process.mix.bunchspace = cms.int32(25)
-process.mix.minBunch = cms.int32(-12)
+process.mix.minBunch = cms.int32(-3)
 process.mix.maxBunch = cms.int32(3)
         """
         PUSECTION=PUSECTION.replace('PUVALUE',opt.PU)

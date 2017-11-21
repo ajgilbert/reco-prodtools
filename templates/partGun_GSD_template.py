@@ -112,7 +112,13 @@ elif gunmode == 'pythia8':
           MinEta = cms.double(1.479),
           MaxEta = cms.double(3.0)
           ),
-        PythiaParameters = cms.PSet(parameterSets = cms.vstring())
+        PythiaParameters = cms.PSet(
+          processParameters = cms.vstring(
+            '15:onMode = 0',
+            '15:onIfMatch = 16 111 -211'
+            ),
+          parameterSets = cms.vstring('processParameters')
+          )
     )
 elif gunmode == 'dijet':
     from Configuration.Generator.Pythia8CommonSettings_cfi import *
@@ -128,10 +134,10 @@ elif gunmode == 'dijet':
             pythia8CommonSettingsBlock,
             pythia8CUEP8M1SettingsBlock,
             processParameters = cms.vstring(
-                'HardQCD:all = on',
-                #'HardQCD:gg2qqbar = on',
-                #'HardQCD:qq2qq = on',
-                #'HardQCD:qqbar2qqbarNew = on',
+                'HardQCD:all = off',
+                'HardQCD:gg2qqbar = on',
+                'HardQCD:qq2qq = on',
+                'HardQCD:qqbar2qqbarNew = on',
                 'PhaseSpace:pTHatMin = DUMMYTHRESHMIN',
                 'PhaseSpace:pTHatMax = DUMMYTHRESHMAX',
                 'PhaseSpace:bias2Selection = on',
